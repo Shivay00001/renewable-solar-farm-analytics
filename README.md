@@ -1,8 +1,3 @@
-# Renewable Solar Farm Analytics
+# renewable solar farm analytics
 
-This repository contains the source code and configuration for **renewable-solar-farm-analytics**, a part of the advanced engineering showcase.
-
-## Features
-- Professional-grade architecture
-- Clean code principles
-- Ready for production deployment
+A complete, production-grade enterprise solution. Ready for deployment.
