@@ -1,50 +1,57 @@
-# Renewable Solar Farm Analytics
+# renewable-solar-farm-analytics
 
-An enterprise-grade solution engineered for high performance.
+A real solar farm telemetry analytics API. Ingest panel telemetry CSV, get
+real computed metrics: energy yield, capacity factor, performance ratio
+(IEC 61724 style), downtime detection, and chart-ready daily series.
 
-![Language](https://img.shields.io/badge/Language-Go-blue)
-![Status](https://img.shields.io/badge/Status-Active-success)
-![License](https://img.shields.io/badge/License-MIT-green)
+## Run
 
-## 🚀 Overview
+```bash
+pip install fastapi uvicorn python-multipart
+uvicorn app:app --port 8003
+```
 
-Welcome to the **Renewable Solar Farm Analytics** repository. This project is built to deliver a robust and scalable solution tailored to modern development standards.
+## Usage
 
-## ✨ Features
+```bash
+# 1. set the plant's rated capacity (kW)
+curl -X POST localhost:8003/config \
+  -H 'Content-Type: application/json' -d '{"rated_capacity_kw":100}'
 
-- **High Performance:** Optimized for speed and efficiency.
-- **Scalable Architecture:** Designed to grow with your needs.
-- **Clean Codebase:** Follows best practices and industry standards.
-- **Secure by Default:** Engineered with security in mind.
+# 2. ingest telemetry CSV (columns: timestamp,irradiance_wm2,temp_c,power_kw)
+curl -F "file=@data/sample.csv" localhost:8003/ingest
 
-## 🛠️ Prerequisites
+# 3. metrics
+curl localhost:8003/metrics
+curl localhost:8003/chart/daily
+```
 
-Ensure you have the following installed in your environment before proceeding:
-- Appropriate runtime/compiler for `Go`
-- Standard development tools
+A deterministic 2-day sample (with a planted 3-hour outage on day 2) ships
+in `data/sample.csv` — regenerate with `python3 make_sample.py`.
 
-## 📦 Installation
+## Endpoints
 
-Follow standard installation steps for `Go` to set up the project locally:
+- `POST /config` — `{"rated_capacity_kw": N}`
+- `POST /ingest` — multipart CSV upload
+- `GET /metrics` — total yield, capacity factor, performance ratio,
+  insolation, downtime events with estimated lost kWh, daily breakdown
+- `GET /chart/daily` — per-day yield / avg irradiance / avg temp
+- `DELETE /data` — clear telemetry
+- `GET /health`
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Shivay00001/renewable-solar-farm-analytics.git
-   ```
-2. Navigate to the project directory:
-   ```bash
-   cd renewable-solar-farm-analytics
-   ```
-3. Install dependencies according to the standard `Go` ecosystem.
+## Metrics math
 
-## 💻 Usage
+- `energy = Σ power × Δt` (Δt from consecutive timestamps)
+- `capacity_factor = energy / (rated_kW × span_hours)`
+- `performance_ratio = (energy / rated_kW) / (insolation_kWh_m² / 1 kW/m²)`
+- downtime: irradiance > 200 W/m² while power < 2% of rated, grouped into
+  events with an estimated lost-kWh figure
 
-Run the project using standard execution commands for `Go`. Ensure all environment variables and configurations are set prior to execution.
+## Test
 
-## 🤝 Contributing
+```bash
+pytest -q
+```
 
-Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
-
-## 📝 License
-
-This project is licensed under standard terms.
+Tests recompute every metric independently from the raw CSV (no app code)
+and assert the API agrees, including the exact outage window.
