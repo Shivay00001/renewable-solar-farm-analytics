@@ -1,5 +1,7 @@
 # renewable-solar-farm-analytics
 
+Built by [VisionQuantech](https://visionquantech.com) — AI agents, apps & tools for small businesses.
+
 A real solar farm telemetry analytics API. Ingest panel telemetry CSV, get
 real computed metrics: energy yield, capacity factor, performance ratio
 (IEC 61724 style), downtime detection, and chart-ready daily series.
